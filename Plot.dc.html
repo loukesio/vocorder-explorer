@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;width:100%">
+  <svg viewBox="{{ viewBox }}" style="width:100%;height:auto;display:block;font-family:'IBM Plex Sans',system-ui,sans-serif;overflow:visible" onMouseLeave="{{ leave }}">
+    <sc-for list="{{ yTicks }}" as="t" hint-placeholder-count="0">
+      <line x1="{{ ML }}" x2="{{ XR }}" y1="{{ t.y }}" y2="{{ t.y }}" style="stroke:#E6EAE8;stroke-width:1"></line>
+      <text x="{{ MLt }}" y="{{ t.y }}" style="fill:#5C6664;font-size:12px;font-family:'IBM Plex Mono',monospace;text-anchor:end;dominant-baseline:middle">{{ t.label }}</text>
+    </sc-for>
+    <line x1="{{ ML }}" x2="{{ XR }}" y1="{{ YB }}" y2="{{ YB }}" style="stroke:#C9D0CD;stroke-width:1"></line>
+    <sc-for list="{{ xTicks }}" as="t" hint-placeholder-count="0">
+      <text x="{{ t.x }}" y="{{ XY }}" style="fill:#1B1F1E;font-size:13px;text-anchor:middle">{{ t.label }}</text>
+      <text x="{{ t.x }}" y="{{ XY2 }}" style="fill:#5C6664;font-size:12px;font-family:'IBM Plex Mono',monospace;text-anchor:middle">{{ t.sub }}</text>
+    </sc-for>
+    <sc-for list="{{ lines }}" as="l" hint-placeholder-count="0">
+      <path d="{{ l.d }}" style="{{ l.style }}"></path>
+    </sc-for>
+    <sc-for list="{{ pts }}" as="p" hint-placeholder-count="0">
+      <path d="{{ p.d }}" style="{{ p.style }}" onMouseEnter="{{ p.enter }}" onClick="{{ p.click }}"></path>
+    </sc-for>
+    <sc-for list="{{ marks }}" as="m" hint-placeholder-count="0">
+      <line x1="{{ m.x1 }}" x2="{{ m.x2 }}" y1="{{ m.y1 }}" y2="{{ m.y2 }}" style="{{ m.style }}"></line>
+    </sc-for>
+    <sc-for list="{{ labels }}" as="l" hint-placeholder-count="0">
+      <text x="{{ l.x }}" y="{{ l.y }}" style="{{ l.style }}">{{ l.text }}</text>
+    </sc-for>
+    <text transform="rotate(-90)" x="{{ negMid }}" y="14" style="fill:#5C6664;font-size:12.5px;text-anchor:middle">{{ yLabel }}</text>
+    <text x="{{ xMid }}" y="{{ HB }}" style="fill:#5C6664;font-size:12.5px;text-anchor:middle">{{ xLabel }}</text>
+  </svg>
+  <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ tipStyle }}">
+      <div style="font-weight:600;font-size:13px;margin-bottom:3px">{{ hover.title }}</div>
+      <sc-for list="{{ hover.lines }}" as="ln" hint-placeholder-count="0">
+        <div style="font-size:12.5px;color:#3B4543;line-height:1.4">{{ ln }}</div>
+      </sc-for>
+      <div style="font-size:11.5px;color:#8A9491;margin-top:4px">Click to open this person</div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:640,&quot;height&quot;:380},&quot;plot&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;onPick&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;(id: string) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = { hover: null };
+  renderVals() {
+    const P = this.props.plot || {};
+    const w = P.w || 640, h = P.h || 360, ML = P.ML || 64, MR = P.MR || 16, MT = P.MT || 18, MB = P.MB || 46;
+    const hover = this.state.hover;
+    const pts = (P.pts || []).map(p => ({
+      ...p,
+      style: hover && hover.id === p.id ? { ...p.style, stroke: '#1B1F1E', strokeWidth: 2.4, fillOpacity: 1 } : p.style,
+      enter: () => this.setState({ hover: p }),
+      click: () => this.props.onPick && this.props.onPick(p.id)
+    }));
+    return {
+      viewBox: `0 0 ${w} ${h}`, ML, MLt: ML - 8, XR: w - MR, YB: h - MB, XY: h - MB + 18, XY2: h - MB + 33, HB: h - 4,
+      xMid: ML + (w - ML - MR) / 2, negMid: -(MT + (h - MT - MB) / 2),
+      yTicks: P.yTicks || [], xTicks: P.xTicks || [], lines: P.lines || [], marks: P.marks || [], labels: P.labels || [],
+      xLabel: P.xLabel || '', yLabel: P.yLabel || '', pts, hover, hasHover: !!hover,
+      tipStyle: hover ? { position: 'absolute', left: (hover.cx / w * 100) + '%', top: (hover.cy / h * 100) + '%', transform: 'translate(-50%,calc(-100% - 12px))', background: '#fff', border: '1px solid #D5DBD8', borderRadius: 8, padding: '8px 11px', boxShadow: '0 6px 18px rgba(20,30,28,0.12)', pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 3 } : {},
+      leave: () => this.setState({ hover: null })
+    };
+  }
+}
+</script>
+</body>
+</html>
